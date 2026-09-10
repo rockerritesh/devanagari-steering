@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How Far Can a Single Vector Carry a Language?</title>
+<meta name="description" content="Mechanistic limits of inference-time steering for low-resource Devanagari languages (Llama-3.1-8B, Aya-23-8B).">
+<style>
+  :root{
+    --bg:#fbfaf7; --fg:#1c1c1c; --muted:#5b5b5b; --card:#ffffff;
+    --accent:#8a3324; --border:#e4e0d8; --btn:#f3efe7;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#161513; --fg:#eceae5; --muted:#a8a49c; --card:#201e1b;
+           --accent:#e08a6d; --border:#37332d; --btn:#2a2723; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);
+       font:17px/1.65 Georgia,"Times New Roman",serif;}
+  .wrap{max-width:880px;margin:0 auto;padding:48px 20px 80px}
+  h1{font-size:1.9em;line-height:1.25;text-align:center;margin:.2em 0 .1em}
+  .subtitle{text-align:center;font-size:1.15em;color:var(--muted);margin:0 0 1.2em}
+  .authors{text-align:center;margin:.4em 0 .2em;font-size:1.05em}
+  .authors a{color:var(--fg);text-decoration:none;border-bottom:1px dotted var(--muted)}
+  .affil{text-align:center;color:var(--muted);font-size:.95em;margin-bottom:1.4em}
+  .status{text-align:center;font-size:.95em;color:var(--muted);font-style:italic;margin-bottom:1.6em}
+  .btns{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:2.4em}
+  .btns a{display:inline-block;padding:9px 20px;border-radius:22px;background:var(--btn);
+          border:1px solid var(--border);color:var(--fg);text-decoration:none;
+          font-family:system-ui,sans-serif;font-size:.92em}
+  .btns a:hover{border-color:var(--accent);color:var(--accent)}
+  h2{font-size:1.3em;margin:2.2em 0 .5em;color:var(--accent)}
+  figure{margin:1.4em 0}
+  img{max-width:100%;border:1px solid var(--border);border-radius:6px;background:#fff}
+  figcaption{font-size:.88em;color:var(--muted);margin-top:.5em;line-height:1.5}
+  .finding{background:var(--card);border:1px solid var(--border);border-radius:10px;
+           padding:18px 22px;margin:1.2em 0}
+  .finding b:first-child{color:var(--accent)}
+  pre{background:var(--btn);border:1px solid var(--border);border-radius:8px;
+      padding:14px;overflow-x:auto;font-size:.8em;line-height:1.5}
+  .note{font-size:.88em;color:var(--muted);border-left:3px solid var(--accent);
+        padding-left:12px;margin:1.6em 0}
+  footer{margin-top:3em;padding-top:1em;border-top:1px solid var(--border);
+         font-size:.85em;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>How Far Can a Single Vector Carry a Language?</h1>
+<p class="subtitle">Mechanistic Limits of Inference-Time Steering for Low-Resource Devanagari Languages</p>
+
+<p class="authors">
+  <a href="https://orcid.org/0009-0009-9984-2956">Sumit Yadav</a> &nbsp;·&nbsp;
+  <a href="https://orcid.org/0009-0003-0577-7345">Santosh Giri</a> &nbsp;·&nbsp;
+  <a href="https://orcid.org/0000-0002-1926-1492">Ganesh Gautam</a>
+</p>
+<p class="affil">Department of Electronics and Computer Engineering<br>
+IOE, Pulchowk Campus, Tribhuvan University, Nepal</p>
+
+<p class="status">Under review at <em>Machine Learning</em> (Springer) · Preprint on Research Square</p>
+
+<div class="btns">
+  <a href="https://doi.org/10.21203/rs.3.rs-10978527/v1">📄 Preprint (DOI)</a>
+  <a href="https://github.com/rockerritesh/devanagari-steering">💻 Code</a>
+  <a href="https://huggingface.co/datasets/rockerritesh/devanagari-parallel-250">🤗 Dataset (on acceptance)</a>
+  <a href="mailto:ganesh@pcampus.edu.np">✉️ Contact</a>
+</div>
+
+<figure>
+  <img src="assets/method_overview.png" alt="Method overview: memory banks, centroid-difference steering vector, single-layer hook">
+  <figcaption><b>Method.</b> Per-language activation memory banks from a 250-passage
+  parallel corpus give a centroid-difference direction
+  v<sub>ℓ</sub> = μ<sub>src</sub> − μ<sub>tgt</sub> at each layer; generation is steered by
+  adding α·v<sub>ℓ</sub> to the residual stream at every token position — no fine-tuning,
+  no new data, no weight updates.</figcaption>
+</figure>
+
+<h2>What is this about?</h2>
+<p>
+Large multilingual decoders publish closed lists of supported languages: Llama-3.1 and
+Aya-23 both claim <b>Hindi</b> but not its lower-resource Devanagari sisters —
+<b>Maithili, Nepali, and Bhojpuri</b>. We ask a mechanistic question:
+<em>where</em>, and <em>how far</em>, can a single inference-time direction move such a
+model toward an unclaimed sister language, using only its Hindi representations?
+Because the four languages share the Devanagari script and most subword tokens, any
+shift must reflect representation geometry rather than vocabulary. Steering here is
+used as a <b>causal probe</b> of where language identity is manipulable — not as a
+deployment recipe.
+</p>
+
+<h2>Findings</h2>
+
+<div class="finding">
+<b>1 · A shared hourglass, decodable everywhere.</b> Both models show the same depth
+profile: languages are distinct at the surface, merge mid-network, and re-separate
+near the output — yet language identity stays ~99.5% linearly decodable at
+<em>every</em> layer. Geometric prominence and information are different things.
+</div>
+<figure>
+  <img src="assets/hourglass_combined_llama_aya.png" alt="Hourglass geometry across layers for Llama and Aya">
+  <figcaption>Layer-wise language geometry (Llama-3.1-8B left, Aya-23-8B right): silhouette
+  dips mid-network while probe accuracy stays at ceiling.</figcaption>
+</figure>
+
+<div class="finding">
+<b>2 · Steering works at the re-divergence onset — but only at the surface.</b> Adding
+the centroid-difference vector at layer 20 (Llama) / 22 (Aya) shifts generation toward
+the target: Nepali-on-Llama reaches <b>4.03/5</b> language adherence (three-judge
+cross-family LLM panel). But fluency collapses into repetition, and <em>no</em>
+(model, target, α) cell is simultaneously target-adherent and fluent.
+</div>
+<figure>
+  <img src="assets/pareto_scatter_combined.png" alt="Adherence versus fluency frontier">
+  <figcaption>The single-layer adherence–fluency frontier across both models, three targets,
+  and all steering strengths. Only Llama–Nepali crosses into "mostly target".</figcaption>
+</figure>
+
+<div class="finding">
+<b>3 · The lift is the direction, not the push.</b> Matched-magnitude random directions
+are inert on every metric (0/300 generations reach adherence ≥3). Multi-layer
+composites and full depth-trajectory injection do <em>not</em> beat the best single
+layer — while few-shot prompting does reach fluent sisters, so the ceiling is a limit
+of single-direction steering, not model competence.
+</div>
+<figure>
+  <img src="assets/llama_npi_random_vs_real.png" alt="Control versus random direction versus real vector across five metrics">
+  <figcaption>Direction specificity at the adherence peak: the real vector moves every
+  language metric; equal-magnitude random directions move none.</figcaption>
+</figure>
+
+<div class="finding">
+<b>4 · Separability predicts steerability; proximity does not.</b> Within Llama, peak
+adherence follows the linear separability of the target from Hindi — <em>reversing</em>
+the cosine-proximity ordering (Bhojpuri is closest yet least steerable). And
+<b>Hindi ≫ English</b> as the steering source (4.03 vs 1.14 for Nepali) despite
+English's pretraining dominance: transfer is driven by linguistic proximity at the
+steering layer, not resource level.
+</div>
+<figure>
+  <img src="assets/geometry_vs_steerability.png" alt="Proximity fails to predict steerability; separability predicts it">
+  <figcaption>Peak adherence vs cosine proximity (left; does not predict) and vs linear
+  separability at the steering layer (right; predicts, within-Llama).</figcaption>
+</figure>
+
+<p class="note">
+The four-way parallel corpus is <b>machine-translated (synthetic)</b> — it is clearly
+labelled as LLM-generated and not native-speaker-validated, and will be public at the
+dataset link upon acceptance. The evaluation combines a three-judge cross-family LLM
+panel (Krippendorff α = 0.86) with reference-free metrics (LaBSE, IndicBERT
+pseudo-perplexity, code-mixing indices, GlotLID) and their per-generation convergent
+validity.
+</p>
+
+<h2>Citation</h2>
+<pre>@article{yadav2026singlevector,
+  title  = {How Far Can a Single Vector Carry a Language? Mechanistic Limits of
+            Inference-Time Steering for Low-Resource Devanagari Languages},
+  author = {Yadav, Sumit and Giri, Santosh and Gautam, Ganesh},
+  year   = {2026},
+  note   = {Preprint (under review at Machine Learning, Springer)},
+  doi    = {10.21203/rs.3.rs-10978527/v1}
+}</pre>
+
+<footer>
+Code: MIT · Figures © the authors · <a href="https://github.com/rockerritesh/devanagari-steering" style="color:var(--muted)">github.com/rockerritesh/devanagari-steering</a>
+</footer>
+</div>
+</body>
+</html>

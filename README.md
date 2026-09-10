@@ -4,6 +4,9 @@
 
 Sumit Yadav, Santosh Giri, Ganesh Gautam — IOE, Pulchowk Campus, Tribhuvan University
 
+**Project page:** <https://rockerritesh.github.io/devanagari-steering/> ·
+**Preprint:** [doi.org/10.21203/rs.3.rs-10978527/v1](https://doi.org/10.21203/rs.3.rs-10978527/v1)
+
 Code for the paper (under review at *Machine Learning*, Springer). We steer two 8B
 multilingual decoders (Llama-3.1-8B-Instruct, Aya-23-8B) from **Hindi** toward its
 lower-resource Devanagari sister languages (**Nepali, Maithili, Bhojpuri**) with a
@@ -87,7 +90,8 @@ request (they are large).
   title  = {How Far Can a Single Vector Carry a Language? Mechanistic Limits of
             Inference-Time Steering for Low-Resource Devanagari Languages},
   author = {Yadav, Sumit and Giri, Santosh and Gautam, Ganesh},
-  note   = {Under review at Machine Learning (Springer)},
+  note   = {Preprint (under review at Machine Learning, Springer)},
+  doi    = {10.21203/rs.3.rs-10978527/v1},
   year   = {2026}
 }
 ```
